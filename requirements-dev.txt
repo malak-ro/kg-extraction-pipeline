@@ -1,0 +1,4 @@
+# Optionnel — outillage de qualité de code (bonus, au-delà du strict minimum)
+ruff>=0.5,<1
+black>=24.0,<25
+mypy>=1.10,<2
