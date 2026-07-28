@@ -27,3 +27,7 @@ class GraphWriteError(PipelineError):
 
 class ConfigurationError(PipelineError):
     """Levée quand une configuration requise est manquante ou invalide."""
+
+
+class ArxivApiError(PipelineError):
+    """Levée quand l'API arXiv retourne une erreur ou une réponse inattendue."""
