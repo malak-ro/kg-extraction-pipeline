@@ -57,8 +57,14 @@ class ArxivPaper:
     def to_text(self) -> str:
         """Contenu textuel utilisé pour le fichier .txt (titre + abstract) —
         c'est ce que TxtLoader relira ensuite, et ce sur quoi NER/RE
-        travailleront aux jalons suivants."""
-        return f"{self.title}\n\n{self.abstract}"
+        travailleront aux jalons suivants.
+
+        On force un point final après le titre s'il n'en a pas déjà un :
+        repéré en testant bout en bout que sans ça, la segmentation en
+        phrases fusionne le titre avec la première phrase de l'abstract
+        (aucune ponctuation entre les deux sinon)."""
+        title = self.title if self.title.endswith((".", "!", "?")) else f"{self.title}."
+        return f"{title}\n\n{self.abstract}"
 
 
 class ArxivClient:

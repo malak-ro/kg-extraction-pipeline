@@ -8,6 +8,7 @@ pytest-cov>=5.0,<6
 pdfplumber>=0.11,<1
 python-docx>=1.1,<2
 requests>=2.31,<3
+spacy>=3.7,<4
 
 # Les jalons suivants ajouteront ici : spacy, transformers, neo4j, pandas,
 # networkx, openai (ou équivalent open-source), etc. — un jalon à la fois,

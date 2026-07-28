@@ -3,9 +3,9 @@ Point d'entrée du pipeline.
 
 Jalon 1 : smoke test (config + logging + dossiers).
 Jalon 2 : récupère un corpus d'abstracts arXiv (si absent localement),
-puis recharge chaque fichier via le DocumentLoaderRegistry — la même
-abstraction qui lira aussi les PDF/DOCX que l'utilisateur ajoutera plus tard.
-L'orchestration continuera de grandir ici, jalon après jalon.
+recharge chaque fichier via le DocumentLoaderRegistry, puis nettoie et
+segmente chaque document en phrases (data/processed/). L'orchestration
+continuera de grandir ici, jalon après jalon.
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from config.settings import settings
 from src.preprocessing.arxiv_client import ArxivClient
 from src.preprocessing.corpus_builder import save_corpus
 from src.preprocessing.loaders import DocumentLoaderRegistry
+from src.preprocessing.pipeline import process_document, save_processed
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -52,8 +53,20 @@ def main() -> None:
     documents = [registry.load(path) for path in txt_files]
     logger.info("%d documents chargés depuis data/raw/ via DocumentLoaderRegistry.", len(documents))
 
-    logger.info("Jalon 2 (ingestion) opérationnel.")
-    logger.info("Prochaine étape : nettoyage/segmentation, puis Jalon 3 — NER.")
+    total_sentences = 0
+    for document in documents:
+        processed = process_document(document)
+        save_processed(processed, settings.processed_data_dir)
+        total_sentences += processed.sentence_count
+
+    avg = total_sentences / len(documents) if documents else 0
+    logger.info(
+        "%d documents nettoyés et segmentés (%d phrases au total, %.1f en moyenne/doc) -> data/processed/",
+        len(documents), total_sentences, avg,
+    )
+
+    logger.info("Jalon 2 (ingestion + prétraitement) opérationnel.")
+    logger.info("Prochaine étape : Jalon 3 — NER.")
 
 
 if __name__ == "__main__":
