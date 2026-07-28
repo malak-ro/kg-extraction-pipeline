@@ -1,0 +1,8 @@
+Attention Is All You Need
+
+We propose a new simple network architecture, the Transformer, based solely
+on attention mechanisms, dispensing with recurrence and convolutions entirely.
+Experiments on two machine translation tasks show these models to be superior
+in quality while being more parallelizable and requiring significantly less
+time to train. Vaswani et al. introduced this architecture in 2017 at Google
+Brain, and it has since become the foundation of most modern language models.
