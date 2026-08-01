@@ -4,12 +4,16 @@ Point d'entrée du pipeline.
 Jalon 1 : smoke test (config + logging + dossiers).
 Jalon 2 : récupère un corpus d'abstracts arXiv (si absent localement),
 recharge chaque fichier via le DocumentLoaderRegistry, puis nettoie et
-segmente chaque document en phrases (data/processed/). L'orchestration
-continuera de grandir ici, jalon après jalon.
+segmente chaque document en phrases (data/processed/).
+Jalon 3 : extrait les entités de chaque phrase avec GLiNER (retenu après
+comparaison objective face à spaCy — voir src/ner/compare.py) et
+enrichit chaque fichier data/processed/*.json en conséquence.
+L'orchestration continuera de grandir ici, jalon après jalon.
 """
 from __future__ import annotations
 
 from config.settings import settings
+from src.ner.pipeline import annotate_document, is_already_annotated, save_annotated
 from src.preprocessing.arxiv_client import ArxivClient
 from src.preprocessing.corpus_builder import save_corpus
 from src.preprocessing.loaders import DocumentLoaderRegistry
@@ -40,6 +44,35 @@ def _ensure_corpus() -> None:
     logger.info("%d papiers arXiv récupérés et sauvegardés.", len(papers))
 
 
+def _ensure_entities() -> None:
+    """Annote chaque document avec les entités GLiNER, une seule fois
+    (idempotent, même logique que _ensure_corpus) : si le premier fichier
+    a déjà un champ "entities_by_sentence", on considère tout le corpus
+    déjà annoté."""
+    processed_files = sorted(settings.processed_data_dir.glob("arxiv_*.json"))
+    if not processed_files:
+        logger.warning("Aucun document dans data/processed/ — rien à annoter.")
+        return
+
+    if is_already_annotated(processed_files[0]):
+        logger.info("Entités déjà extraites localement — pas de nouveau passage NER.")
+        return
+
+    # Import local : GLiNER (+ torch) est une dépendance lourde, inutile de
+    # la charger si l'idempotence ci-dessus permet de sauter cette étape.
+    from src.ner.gliner_extractor import GlinerEntityExtractor
+
+    logger.info("Extraction des entités (GLiNER) sur %d documents...", len(processed_files))
+    extractor = GlinerEntityExtractor()
+    total_entities = 0
+    for path in processed_files:
+        sentence_entities = annotate_document(path, extractor)
+        save_annotated(path, sentence_entities)
+        total_entities += sum(len(se.entities) for se in sentence_entities)
+
+    logger.info("%d entités extraites au total -> data/processed/", total_entities)
+
+
 def main() -> None:
     logger.info("Démarrage du pipeline (environnement=%s)", settings.environment)
 
@@ -65,8 +98,10 @@ def main() -> None:
         len(documents), total_sentences, avg,
     )
 
-    logger.info("Jalon 2 (ingestion + prétraitement) opérationnel.")
-    logger.info("Prochaine étape : Jalon 3 — NER.")
+    _ensure_entities()
+
+    logger.info("Jalon 3 (NER) opérationnel.")
+    logger.info("Prochaine étape : Jalon 4 — extraction de relations.")
 
 
 if __name__ == "__main__":
