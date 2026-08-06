@@ -14,6 +14,8 @@ click>=8.0,<9
 # Jalon 3 — NER
 gliner>=0.2,<1
 
-# Les jalons suivants ajouteront ici : spacy, transformers, neo4j, pandas,
-# networkx, openai (ou équivalent open-source), etc. — un jalon à la fois,
-# pour ne jamais installer une dépendance avant d'en avoir besoin.
+# Jalon 4 — Extraction de relations
+openai>=1.0,<2
+
+# Jalons suivants : neo4j, pandas, networkx — un jalon à la fois, pour ne
+# jamais installer une dépendance avant d'en avoir besoin.

@@ -43,8 +43,10 @@ class Settings(BaseSettings):
     neo4j_user: str = Field(default="neo4j")
     neo4j_password: str = Field(default="changeme")
 
-    # --- LLM (utilisé à partir du Jalon 4) ---
-    openai_api_key: str | None = None
+    # --- LLM (Jalon 4, sous-étape 2) : Groq, choisi car gratuit sans
+    # carte bancaire, contrairement à OpenAI qui n'offre plus de palier
+    # gratuit en 2026 ---
+    groq_api_key: str | None = None
 
     # --- Chemins (Path, pas str, pour pouvoir appeler .mkdir()/.exists() direct) ---
     data_dir: Path = PROJECT_ROOT / "data"
